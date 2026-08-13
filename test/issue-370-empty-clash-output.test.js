@@ -99,4 +99,26 @@ describe('Issues #370/#373/#277 - remote subscription decode and empty Clash out
         expect(nodeSelect.proxies).toEqual(['DIRECT', 'REJECT']);
         expectNoEmptyUrlTestGroup(built);
     });
+    it('keeps an unreachable HTTP subscription as a Clash provider for client-side refresh', async () => {
+        const remoteUrl = 'https://provider.example.com/subscription?token=unreachable';
+        vi.stubGlobal('fetch', vi.fn(async () => ({
+            ok: false,
+            status: 403,
+            text: async () => '',
+            headers: { get: () => null }
+        })));
+
+        const builder = new ClashConfigBuilder(
+            remoteUrl,
+            'minimal',
+            [],
+            null,
+            'zh-CN',
+            'clash-verge/v2.5.2'
+        );
+        const built = yaml.load(await builder.build());
+        const providers = Object.values(built['proxy-providers'] || {});
+
+        expect(providers.some(provider => provider.url === remoteUrl)).toBe(true);
+    });
 });

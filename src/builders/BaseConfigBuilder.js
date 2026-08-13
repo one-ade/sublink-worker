@@ -138,6 +138,10 @@ export class BaseConfigBuilder {
                                 }
                             }
                         }
+                        if (!fetchResult && this.shouldUseRemoteProviderFallback()) {
+                            this.providerUrls.push(trimmedUrl);
+                            continue;
+                        }
                     } catch (error) {
                         console.error('Error processing HTTP subscription:', error);
                     }
@@ -188,6 +192,10 @@ export class BaseConfigBuilder {
      */
     isCompatibleProviderFormat(format) {
         return false;  // Default: no provider support
+    }
+
+    shouldUseRemoteProviderFallback() {
+        return false;
     }
 
     /**

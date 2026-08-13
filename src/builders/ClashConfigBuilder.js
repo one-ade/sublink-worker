@@ -71,6 +71,10 @@ export class ClashConfigBuilder extends BaseConfigBuilder {
         return format === 'clash';
     }
 
+    shouldUseRemoteProviderFallback() {
+        return true;
+    }
+
     /**
      * Generate proxy-providers configuration from collected URLs
      * @returns {object} - proxy-providers object
