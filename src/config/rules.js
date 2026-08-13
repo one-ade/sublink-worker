@@ -12,13 +12,28 @@ export const UNIFIED_RULES = [
 		ip_rules: []
 	},
 	{
-		name: 'AI Services',
-		site_rules: ['category-ai-!cn',],
+		name: 'BiliIntl',
+		site_rules: ['biliintl'],
 		ip_rules: []
 	},
 	{
-		name: 'Bilibili',
-		site_rules: ['bilibili'],
+		name: 'TikTok',
+		site_rules: ['tiktok'],
+		ip_rules: []
+	},
+	{
+		name: 'Bahamut',
+		site_rules: ['bahamut'],
+		ip_rules: []
+	},
+	{
+		name: 'Streaming',
+		site_rules: ['netflix', 'hulu', 'disney', 'hbo', 'primevideo'],
+		ip_rules: ['netflix']
+	},
+	{
+		name: 'AI Services',
+		site_rules: ['category-ai-!cn'],
 		ip_rules: []
 	},
 	{
@@ -32,14 +47,9 @@ export const UNIFIED_RULES = [
 		ip_rules: ['google']
 	},
 	{
-		name: 'Private',
-		site_rules: [],
-		ip_rules: ['private']
-	},
-	{
-		name: 'Location:CN',
-		site_rules: ['geolocation-cn', 'cn'],
-		ip_rules: ['cn']
+		name: 'Github',
+		site_rules: ['github', 'gitlab'],
+		ip_rules: []
 	},
 	{
 		name: 'Telegram',
@@ -47,8 +57,23 @@ export const UNIFIED_RULES = [
 		ip_rules: ['telegram']
 	},
 	{
-		name: 'Github',
-		site_rules: ['github', 'gitlab'],
+		name: 'Social Media',
+		site_rules: ['category-social-media-!cn'],
+		ip_rules: []
+	},
+	{
+		name: 'Game Direct',
+		site_rules: ['category-games@cn'],
+		ip_rules: []
+	},
+	{
+		name: 'Gaming',
+		site_rules: ['steam', 'epicgames', 'ea', 'ubisoft', 'blizzard', 'category-games-!cn'],
+		ip_rules: []
+	},
+	{
+		name: 'Microsoft CN',
+		site_rules: ['microsoft@cn', 'onedrive'],
 		ip_rules: []
 	},
 	{
@@ -57,24 +82,29 @@ export const UNIFIED_RULES = [
 		ip_rules: []
 	},
 	{
+		name: 'Apple CN',
+		site_rules: ['apple-cn'],
+		ip_rules: []
+	},
+	{
 		name: 'Apple',
 		site_rules: ['apple'],
 		ip_rules: []
 	},
 	{
-		name: 'Social Media',
-		site_rules: ['facebook', 'instagram', 'twitter', 'tiktok', 'linkedin'],
+		name: 'Bilibili',
+		site_rules: ['bilibili'],
 		ip_rules: []
 	},
 	{
-		name: 'Streaming',
-		site_rules: ['netflix', 'hulu', 'disney', 'hbo', 'amazon', 'bahamut'],
-		ip_rules: []
+		name: 'Private',
+		site_rules: ['private'],
+		ip_rules: ['private']
 	},
 	{
-		name: 'Gaming',
-		site_rules: ['steam', 'epicgames', 'ea', 'ubisoft', 'blizzard'],
-		ip_rules: []
+		name: 'Location:CN',
+		site_rules: ['geolocation-cn', 'cn'],
+		ip_rules: ['cn']
 	},
 	{
 		name: 'Education',
@@ -99,12 +129,12 @@ export const UNIFIED_RULES = [
 ];
 
 // Rule names that should default to DIRECT instead of Node Select
-export const DIRECT_DEFAULT_RULES = new Set(['Private', 'Location:CN']);
+export const DIRECT_DEFAULT_RULES = new Set(['Private', 'Location:CN', 'Game Direct', 'Microsoft CN', 'Apple CN', 'Bilibili']);
 export const REJECT_ACTION_RULES = new Set(['Ad Block']);
 
 export const PREDEFINED_RULE_SETS = {
 	minimal: ['Location:CN', 'Private', 'Non-China'],
-	balanced: ['Location:CN', 'Private', 'Non-China', 'Github', 'Google', 'Youtube', 'AI Services', 'Telegram'],
+	balanced: ['Location:CN', 'Private', 'Non-China', 'Github', 'Google', 'Youtube', 'AI Services', 'Telegram', 'BiliIntl', 'TikTok', 'Bahamut', 'Social Media', 'Streaming', 'Game Direct', 'Gaming', 'Microsoft CN', 'Microsoft', 'Apple CN', 'Apple', 'Bilibili'],
 	comprehensive: UNIFIED_RULES.map(rule => rule.name)
 };
 
