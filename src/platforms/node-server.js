@@ -6,4 +6,5 @@ const runtime = createNodeRuntime(process.env);
 const app = createApp(runtime);
 const port = Number(process.env.PORT || 8787);
 
-startNodeHttpServer(app, { port, logger: runtime.logger });
+const host = process.env.HOST || '127.0.0.1';
+startNodeHttpServer(app, { port, host, logger: runtime.logger });
