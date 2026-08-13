@@ -193,8 +193,16 @@ export const formLogicFn = (t) => {
                 }
             },
 
+            getAppBasePath() {
+                const match = window.location.pathname.match(/^\/p\/[a-f0-9]{64}(?=\/|$)/);
+                return match ? match[0] : '';
+            },
+
+            getAppUrl(path, queryString = '') {
+                const basePath = this.getAppBasePath();
+                return `${window.location.origin}${basePath}${path}${queryString ? '?' + queryString : ''}`;
+            },
             getSubconverterUrl() {
-                const origin = window.location.origin;
                 const params = new URLSearchParams();
 
                 // Use preset name directly if a predefined rule set is selected
@@ -228,7 +236,7 @@ export const formLogicFn = (t) => {
                 }
 
                 const queryString = params.toString();
-                return origin + '/subconverter' + (queryString ? '?' + queryString : '');
+                return this.getAppUrl('/subconverter', queryString);
             },
 
             copySubconverterUrl() {
@@ -265,7 +273,7 @@ export const formLogicFn = (t) => {
 
                 this.savingConfig = true;
                 try {
-                    const response = await fetch('/config', {
+                    const response = await fetch(this.getAppUrl('/config'), {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -371,7 +379,6 @@ export const formLogicFn = (t) => {
                     const customRules = customRulesInput && customRulesInput.value ? JSON.parse(customRulesInput.value) : [];
 
                     // Construct URLs
-                    const origin = window.location.origin;
                     const params = new URLSearchParams();
                     params.append('config', this.input);
                     params.append('ua', this.customUA);
@@ -394,10 +401,10 @@ export const formLogicFn = (t) => {
                     const queryString = params.toString();
 
                     this.generatedLinks = {
-                        xray: origin + '/xray?' + queryString,
-                        singbox: origin + '/singbox?' + queryString,
-                        clash: origin + '/clash?' + queryString,
-                        surge: origin + '/surge?' + queryString
+                        xray: this.getAppUrl('/xray', queryString),
+                        singbox: this.getAppUrl('/singbox', queryString),
+                        clash: this.getAppUrl('/clash', queryString),
+                        surge: this.getAppUrl('/surge', queryString)
                     };
 
                     // Scroll to results
@@ -429,7 +436,6 @@ export const formLogicFn = (t) => {
 
                 this.shortening = true;
                 try {
-                    const origin = window.location.origin;
                     const shortened = {};
 
                     // Use custom short code if provided, otherwise let backend generate it once
@@ -439,7 +445,7 @@ export const formLogicFn = (t) => {
                     // Shorten each link type
                     for (const [type, url] of Object.entries(this.generatedLinks)) {
                         try {
-                            let apiUrl = `${origin}/shorten-v2?url=${encodeURIComponent(url)}`;
+                            let apiUrl = `${this.getAppUrl('/shorten-v2')}?url=${encodeURIComponent(url)}`;
 
                             // For the first request, either use custom code or let backend generate
                             // For subsequent requests, use the code from first request
@@ -468,7 +474,7 @@ export const formLogicFn = (t) => {
                                 surge: 's'
                             };
 
-                            shortened[type] = `${origin}/${prefixMap[type]}/${returnedCode}`;
+                            shortened[type] = `${window.location.origin}${this.getAppBasePath()}/${prefixMap[type]}/${returnedCode}`;
                         } catch (error) {
                             console.error(`Error shortening ${type} link:`, error);
                             throw error;
@@ -512,13 +518,13 @@ export const formLogicFn = (t) => {
                 try {
                     const url = new URL(text);
                     // Check if it matches our short link pattern: /[bcxs]/[code]
-                    const pathMatch = url.pathname.match(/^\/([bcxs])\/([a-zA-Z0-9_-]+)$/);
+                    const pathMatch = url.pathname.match(/^\/(?:p\/[a-f0-9]{64}\/)?[bcxs]\/[a-zA-Z0-9_-]+$/);
                     if (pathMatch) {
                         return true;
                     }
 
                     // Check if it's a full subscription URL with query params
-                    const fullMatch = url.pathname.match(/^\/(singbox|clash|xray|surge)$/);
+                    const fullMatch = url.pathname.match(/^\/(?:p\/[a-f0-9]{64}\/)?(?:singbox|clash|xray|surge)$/);
                     if (fullMatch && url.search) {
                         return true;
                     }
@@ -546,11 +552,11 @@ export const formLogicFn = (t) => {
                     }
 
                     // Check if it's a short link
-                    const shortMatch = urlToParse.pathname.match(/^\/([bcxs])\/([a-zA-Z0-9_-]+)$/);
+                    const shortMatch = urlToParse.pathname.match(/^\/(?:p\/[a-f0-9]{64}\/)?[bcxs]\/[a-zA-Z0-9_-]+$/);
 
                     if (shortMatch) {
                         // It's a short link, resolve it first
-                        const response = await fetch(`/resolve?url=${encodeURIComponent(text)}`);
+                        const response = await fetch(`${this.getAppUrl('/resolve')}?url=${encodeURIComponent(text)}`);
                         if (!response.ok) {
                             console.warn('Failed to resolve short URL');
                             return;

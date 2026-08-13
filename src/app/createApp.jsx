@@ -20,6 +20,20 @@ import { PREDEFINED_RULE_SETS, SING_BOX_CONFIG, SING_BOX_CONFIG_V1_11, generateS
 
 const DEFAULT_USER_AGENT = 'curl/7.74.0';
 
+const AUTH_BASE_PATH_PATTERN = /^\/p\/[a-f0-9]{64}$/;
+
+function getAuthBasePath(c) {
+    const basePath = c.req.header('X-Sublink-Base-Path') || '';
+    return AUTH_BASE_PATH_PATTERN.test(basePath) ? basePath : '';
+}
+
+function getPublicRequestUrl(c) {
+    const url = new URL(c.req.url);
+    const basePath = getAuthBasePath(c);
+    if (basePath) url.pathname = `${basePath}${url.pathname}`;
+    return url.toString();
+}
+
 export function createApp(bindings = {}) {
     const runtime = normalizeRuntime(bindings);
     const services = {
@@ -204,7 +218,7 @@ export function createApp(bindings = {}) {
                 groupByCountry,
                 includeAutoSelect
             );
-            builder.setSubscriptionUrl(c.req.url);
+            builder.setSubscriptionUrl(getPublicRequestUrl(c));
             await builder.build();
 
             const userinfo = builder.getSubscriptionUserinfo();
@@ -340,7 +354,8 @@ export function createApp(bindings = {}) {
             if (!originalParam) return c.text('Short URL not found', 404);
 
             const url = new URL(c.req.url);
-            return c.redirect(`${url.origin}/${prefix}${originalParam}`);
+            const basePath = getAuthBasePath(c);
+            return c.redirect(`${url.origin}${basePath}/${prefix}${originalParam}`);
         } catch (error) {
             return handleError(c, error, runtime.logger);
         }
@@ -377,11 +392,14 @@ export function createApp(bindings = {}) {
             } catch {
                 return c.text(t('invalidShortUrl'), 400);
             }
-            const pathParts = urlObj.pathname.split('/');
-            if (pathParts.length < 3) return c.text(t('invalidShortUrl'), 400);
+            const pathParts = urlObj.pathname.split('/').filter(Boolean);
+            const candidateBasePath = pathParts[0] === 'p' && pathParts.length >= 4 ? `/${pathParts[0]}/${pathParts[1]}` : '';
+            const tokenizedPath = AUTH_BASE_PATH_PATTERN.test(candidateBasePath);
+            const prefixIndex = tokenizedPath ? 2 : 0;
+            if (pathParts.length < prefixIndex + 2) return c.text(t('invalidShortUrl'), 400);
 
-            const prefix = pathParts[1];
-            const shortCode = pathParts[2];
+            const prefix = pathParts[prefixIndex];
+            const shortCode = pathParts[prefixIndex + 1];
             if (!['b', 'c', 'x', 's'].includes(prefix)) return c.text(t('invalidShortUrl'), 400);
 
             const shortLinks = requireShortLinkService(services.shortLinks);
@@ -389,7 +407,8 @@ export function createApp(bindings = {}) {
             if (!originalParam) return c.text(t('shortUrlNotFound'), 404);
 
             const mapping = { b: 'singbox', c: 'clash', x: 'xray', s: 'surge' };
-            const originalUrl = `${urlObj.origin}/${mapping[prefix]}${originalParam}`;
+            const basePath = tokenizedPath ? candidateBasePath : getAuthBasePath(c);
+            const originalUrl = `${urlObj.origin}${basePath}/${mapping[prefix]}${originalParam}`;
             return c.json({ originalUrl });
         } catch (error) {
             return handleError(c, error, runtime.logger);

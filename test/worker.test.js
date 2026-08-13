@@ -114,4 +114,42 @@ proxy-groups:
         expect(text).toBeTruthy();
         expect(kvMock.put).toHaveBeenCalled();
     });
+
+    it('preserves the token base path in Surge managed URLs', async () => {
+        const app = createTestApp();
+        const tokenPath = '/p/' + 'a'.repeat(64);
+        const config = 'ss://YWVzLTEyOC1nY206dGVzdA@example.com:443#AuthCheck';
+        const res = await app.request(
+            'http://localhost/surge?config=' + encodeURIComponent(config) + '&selectedRules=minimal',
+            { headers: { 'X-Sublink-Base-Path': tokenPath } }
+        );
+        expect(res.status).toBe(200);
+        const text = await res.text();
+        expect(text).toContain('#!MANAGED-CONFIG http://localhost' + tokenPath + '/surge?');
+    });
+
+    it('preserves the token base path in short-link redirect and resolve URLs', async () => {
+        const kv = new MemoryKVAdapter();
+        await kv.put('auth-check', '?config=auth-check');
+        const app = createTestApp({ kv });
+        const tokenPath = '/p/' + 'b'.repeat(64);
+        const headers = { 'X-Sublink-Base-Path': tokenPath };
+
+        const redirect = await app.request('http://localhost/c/auth-check', { headers });
+        expect(redirect.status).toBe(302);
+        expect(redirect.headers.get('location')).toBe(
+            'http://localhost' + tokenPath + '/clash?config=auth-check'
+        );
+
+        const shortUrl = 'https://sublink.example' + tokenPath + '/c/auth-check';
+        const resolved = await app.request(
+            'http://localhost/resolve?url=' + encodeURIComponent(shortUrl),
+            { headers }
+        );
+        expect(resolved.status).toBe(200);
+        const payload = await resolved.json();
+        expect(payload.originalUrl).toBe(
+            'https://sublink.example' + tokenPath + '/clash?config=auth-check'
+        );
+    });
 });
